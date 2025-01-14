@@ -21,7 +21,7 @@ load_dotenv()
 
 # Setup argument parser
 parser = argparse.ArgumentParser(description="Scrape SMOU parking data")
-parser.add_argument('--output', default='/app/automations-running-in-docker/smou_parking_data.json', 
+parser.add_argument('--output', default='/app/smou_parking_data.json', 
                    help="Path to output JSON file")
 args = parser.parse_args()
 
