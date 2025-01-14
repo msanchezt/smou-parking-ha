@@ -40,24 +40,10 @@ This two-component approach is necessary because web scraping with Selenium is n
 1. Clone this repository on a path of your choice
 2. Create a `.env` file with your credentials and data (check .env.example)
 3. Build and run the Docker container:
-
     ```
     docker build -t smou-scraper .
-    docker run -d \
-        --name smou-scraper \
-        --restart unless-stopped \
-        -v /path/to/data:/app/data \
-        --env-file .env \
-        smou-scraper
+    docker run -d --name smou-scraper --restart unless-stopped -v /path/to/data:/app smou-scraper
     ```
-
-The file structure should look like this:
-
-    /path/to/data/
-    └── automations-running-in-docker/
-    ├── smou.py
-    └── smou_parking_data.json (will be created automatically)
-
 4. On your Home Assistant docker mount this extra volume and re-deploy:
     
     ```
@@ -71,4 +57,10 @@ The file structure should look like this:
    - Go to Configuration > Integrations
    - Click the + button and search for "SMOU Parking"
    - Enter the path to the JSON file (must match the mounted volume in Docker). It's recommended to keep the default value.
+
+## Support My Work
+
+If you find this integration helpful, you can buy me a coffee to show your support:
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/msanchezt)
 
