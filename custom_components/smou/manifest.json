@@ -2,9 +2,9 @@
     "domain": "smou_parking",
     "name": "SMOU Parking",
     "config_flow": true,
-    "documentation": "https://github.com/yourusername/smou_parking",
+    "documentation": "https://github.com/msanchezt/smou-parking-ha",
     "dependencies": [],
-    "codeowners": ["@yourusername"],
+    "codeowners": ["@msanchezt"],
     "requirements": ["aiofiles"],
     "version": "1.0.0"
 } 
