@@ -1,0 +1,10 @@
+{
+    "domain": "smou_parking",
+    "name": "SMOU Parking",
+    "config_flow": true,
+    "documentation": "https://github.com/yourusername/smou_parking",
+    "dependencies": [],
+    "codeowners": ["@yourusername"],
+    "requirements": ["aiofiles"],
+    "version": "1.0.0"
+} 

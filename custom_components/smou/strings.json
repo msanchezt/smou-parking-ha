@@ -1,0 +1,15 @@
+{
+    "entity": {
+        "sensor": {
+            "smou_blue_entries": {
+                "name": "Blue Zone Entries"
+            },
+            "smou_green_entries": {
+                "name": "Green Zone Entries"
+            },
+            "smou_total_entries": {
+                "name": "Total Entries"
+            }
+        }
+    }
+} 

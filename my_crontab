@@ -1,0 +1,2 @@
+# Run the script every hour
+0 */4 * * * root /usr/bin/env bash -c 'cd /app && /usr/local/bin/python smou.py --output /app/smou.log 2>&1'

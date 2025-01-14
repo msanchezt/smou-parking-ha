@@ -1,0 +1,6 @@
+{
+    "name": "SMOU Parking",
+    "render_readme": true,
+    "domains": ["sensor"],
+    "homeassistant": "2023.8.0"
+}
