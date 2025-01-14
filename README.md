@@ -58,6 +58,83 @@ This two-component approach is necessary because web scraping with Selenium is n
    - Click the + button and search for "SMOU Parking"
    - Enter the path to the JSON file (must match the mounted volume in Docker). It's recommended to keep the default value.
 
+### 4. Suggested Lovelace Dashboard
+
+You can use the following YAML configuration to create a dashboard that displays your parking data:
+
+```yaml
+type: vertical-stack
+cards:
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: entities
+        title: Blue Zone
+        card_mod:
+          style: |
+            ha-card {
+              --ha-card-header-color: #4473FF;
+            }
+        entities:
+          - entity: sensor.blue_zone_paid
+            name: Paid
+            icon: mdi:cash
+          - entity: sensor.blue_zone_regular_tariff
+            name: Regular rate
+            icon: mdi:cash-multiple
+          - entity: sensor.blue_zone_entries
+            name: Times parked
+            icon: mdi:counter
+      - type: entities
+        title: Green Zone
+        card_mod:
+          style: |
+            ha-card {
+              --ha-card-header-color: #45A72D;
+            }
+        entities:
+          - entity: sensor.green_zone_paid
+            name: Paid
+            icon: mdi:cash
+          - entity: sensor.green_zone_regular_tariff
+            name: Regular rate
+            icon: mdi:cash-multiple
+          - entity: sensor.green_zone_entries
+            name: Times parked
+            icon: mdi:counter
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: entity
+        entity: sensor.total_savings
+        name: Total Savings
+        icon: mdi:currency-eur
+        state_color: false
+      - type: entity
+        entity: sensor.total_entries
+        name: Times parked
+        icon: mdi:counter
+  - type: history-graph
+    title: 💶 Payment History
+    hours_to_show: 500
+    entities:
+      - entity: sensor.blue_zone_paid
+        name: Blue
+      - entity: sensor.green_zone_paid
+        name: Green
+      - entity: sensor.total_savings
+        name: Savings
+```
+
+This dashboard includes:
+- Separate cards for Blue and Green zone statistics
+- Total savings and parking entries counters
+- A historical graph showing payment trends over time
+
+Note: This configuration requires the `card-mod` custom card to be installed via HACS for the colored headers.
+
 ## Support My Work
 
 If you find this integration helpful, you can buy me a coffee to show your support:
