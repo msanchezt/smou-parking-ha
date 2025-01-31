@@ -303,7 +303,10 @@ def collect_parking_data():
                                             "license_plate": pdf_data.get('license_plate', ''),
                                             "environmental_label": pdf_data.get('environmental_label', '')
                                         }
-
+                                        break  # Exit the while loop once we've processed the PDF
+                            except Exception as e:
+                                print(f"Error processing row: {e}")
+                                continue
 
                             new_entries.append(record)
                             existing_ids.add(entry_id)
