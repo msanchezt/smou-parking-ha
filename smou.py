@@ -221,11 +221,6 @@ def collect_parking_data():
                     for row in rows[1:]:  # Skip header
                         cells = row.find_elements(By.TAG_NAME, "td")
                         
-                        # Add before processing each row
-                        print(f"Processing row with cells count: {len(cells)}")
-                        if cells:
-                            print(f"Row content: {[cell.text for cell in cells]}")
-
                         if cells and type_of_service_checked in cells[5].text.strip() and cells[4].text.strip() in specific_plates:
                             entry_id = cells[1].text.strip()
                             
@@ -233,44 +228,31 @@ def collect_parking_data():
                             if entry_id in existing_ids:
                                 continue
                             
-                            # First, click the "Accions" button for this row
+                            print(f"Processing row with cells count: {len(cells)}")
+                            print(f"Row content: {[cell.text for cell in cells]}")
+                            
                             try:
-                                # Wait for the button to be present and clickable
-                                actions_button = WebDriverWait(driver, 10).until(
-                                    EC.element_to_be_clickable((By.CSS_SELECTOR, "button.mat-menu-trigger"))
-                                )
-                                actions_button.click()
+                                # Get the last cell (Accions column)
+                                actions_cell = cells[-1]
+                                print(f"Found actions cell with text: {actions_cell.text}")
+                                
+                                # Click the button inside the actions cell
+                                actions_button = actions_cell.find_element(By.TAG_NAME, "button")
+                                driver.execute_script("arguments[0].click();", actions_button)
                                 time.sleep(1)  # Small wait after click
                                 
-                                # Wait for the PDF download button and click it
+                                # Wait for the dropdown menu and find the PDF download option
                                 pdf_button = WebDriverWait(driver, 10).until(
-                                    EC.element_to_be_clickable((By.CSS_SELECTOR, "button.mat-menu-item div.actionText"))
+                                    EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'actionText') and contains(text(), 'Descarregar PDF')]"))
                                 )
-                                pdf_button.click()
+                                driver.execute_script("arguments[0].click();", pdf_button)
                                 time.sleep(2)  # Wait for download to start
                                 
+                                print(f"Successfully clicked PDF download for entry {entry_id}")
+                                
                             except Exception as e:
-                                print(f"Error clicking buttons for entry {entry_id}: {e}")
+                                print(f"Error clicking buttons for entry {entry_id}: {str(e)}")
                                 continue
-                            
-                            # Get the latest downloaded file from the default Chrome download directory
-                            download_dir = "/app/downloads"  # Adjust this path according to your Docker setup
-                            list_of_files = glob.glob(f"{download_dir}/*.pdf")
-                            latest_file = max(list_of_files, key=os.path.getctime)
-                            
-                            # Parse the PDF
-                            try:
-                                with pdfplumber.open(latest_file) as pdf:
-                                    first_page = pdf.pages[0]
-                                    text = first_page.extract_text()
-                                    print(f"PDF content for entry {entry_id}:")
-                                    print(text)
-                                    # TODO: Parse specific fields from the PDF
-                                    
-                                # Clean up - delete the PDF after processing
-                                os.remove(latest_file)
-                            except Exception as e:
-                                print(f"Error processing PDF for entry {entry_id}: {e}")
                             
                             # Continue with existing record creation
                             record = {
