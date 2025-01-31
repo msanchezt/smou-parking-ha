@@ -153,14 +153,6 @@ def collect_parking_data():
         for account in accounts:
             print(f"\nProcessing account: {account['username']}")
             
-            # Set up Chrome options and WebDriver (existing code)
-            options = Options()
-            options.add_argument("--ignore-certificate-errors")
-            options.add_argument("--headless")
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-dev-shm-usage")
-            options.add_argument(f"user-agent={random.choice(user_agents)}")
-            
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
             driver.set_window_size(1920, 1080)  # Full HD resolution
             
@@ -176,6 +168,10 @@ def collect_parking_data():
                 time.sleep(2)
                 driver.set_page_load_timeout(180)
                 driver.get(smou_moviments)
+
+                # Add after successful login
+                print("Successfully logged in")
+                print(f"Current URL: {driver.current_url}")
 
                 # Select custom range and input dates
                 mat_select = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.ID, "mat-select-0")))
@@ -225,6 +221,11 @@ def collect_parking_data():
                     for row in rows[1:]:  # Skip header
                         cells = row.find_elements(By.TAG_NAME, "td")
                         
+                        # Add before processing each row
+                        print(f"Processing row with cells count: {len(cells)}")
+                        if cells:
+                            print(f"Row content: {[cell.text for cell in cells]}")
+
                         if cells and type_of_service_checked in cells[5].text.strip() and cells[4].text.strip() in specific_plates:
                             entry_id = cells[1].text.strip()
                             
@@ -233,17 +234,24 @@ def collect_parking_data():
                                 continue
                             
                             # First, click the "Accions" button for this row
-                            actions_button = row.find_element(By.XPATH, ".//button[contains(@class, 'mat-menu-trigger')]")
-                            actions_button.click()
-                            
-                            # Wait for the PDF download button and click it
-                            pdf_button = WebDriverWait(driver, 10).until(
-                                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'mat-menu-item')]//div[contains(text(), 'Descarregar PDF')]"))
-                            )
-                            pdf_button.click()
-                            
-                            # Wait for download to complete (adjust the timeout as needed)
-                            time.sleep(2)
+                            try:
+                                # Wait for the button to be present and clickable
+                                actions_button = WebDriverWait(driver, 10).until(
+                                    EC.element_to_be_clickable((By.CSS_SELECTOR, "button.mat-menu-trigger"))
+                                )
+                                actions_button.click()
+                                time.sleep(1)  # Small wait after click
+                                
+                                # Wait for the PDF download button and click it
+                                pdf_button = WebDriverWait(driver, 10).until(
+                                    EC.element_to_be_clickable((By.CSS_SELECTOR, "button.mat-menu-item div.actionText"))
+                                )
+                                pdf_button.click()
+                                time.sleep(2)  # Wait for download to start
+                                
+                            except Exception as e:
+                                print(f"Error clicking buttons for entry {entry_id}: {e}")
+                                continue
                             
                             # Get the latest downloaded file from the default Chrome download directory
                             download_dir = "/app/downloads"  # Adjust this path according to your Docker setup
