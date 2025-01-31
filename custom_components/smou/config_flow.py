@@ -13,28 +13,28 @@ from .const import DOMAIN, DEFAULT_JSON_PATH
 YEARS = [2023, 2024, 2025]
 RATE_TYPES_BY_YEAR = {
     2023: {
-        "blue_regular": 3.25,
-        "blue_eco": 2.50,
+        "blue_regular": 3.00,
+        "blue_eco": 2.25,
         "blue_zero": 0.0,
         "green_regular": 3.5,
         "green_eco": 2.75,
         "green_zero": 0.5
     },
     2024: {
-        "blue_regular": 3.25,
-        "blue_eco": 2.50,
+        "blue_regular": 3.00,
+        "blue_eco": 2.25,
         "blue_zero": 0.0,
         "green_regular": 3.5,
         "green_eco": 2.75,
         "green_zero": 0.5
     },
     2025: {
-        "blue_regular": 3.25,
-        "blue_eco": 2.50,
-        "blue_zero": 0.0,
+        "blue_regular": 3.00,
+        "blue_eco": 2.25,
+        "blue_zero": 1.15,
         "green_regular": 3.5,
         "green_eco": 2.75,
-        "green_zero": 0.5
+        "green_zero": 1.4
     }
 }
 
