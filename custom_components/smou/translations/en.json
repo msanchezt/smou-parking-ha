@@ -2,28 +2,29 @@
     "config": {
         "step": {
             "user": {
+                "description": "Note: New tariffs for each year come into effect on February 1st. January rates use the previous year's tariffs.",
                 "data": {
                     "json_path": "Path to JSON file",
-                    "blue_regular_2023": "Blue Zone Regular Rate (2023)",
-                    "blue_eco_2023": "Blue Zone Eco Rate (2023)",
-                    "blue_zero_2023": "Blue Zone Zero Rate (2023)",
-                    "green_regular_2023": "Green Zone Regular Rate (2023)",
-                    "green_eco_2023": "Green Zone Eco Rate (2023)",
-                    "green_zero_2023": "Green Zone Zero Rate (2023)",
+                    "blue_regular_2023": "Blue Zone Regular Rate (2023, effective Feb 1st)",
+                    "blue_eco_2023": "Blue Zone Eco Rate (2023, effective Feb 1st)",
+                    "blue_zero_2023": "Blue Zone Zero Rate (2023, effective Feb 1st)",
+                    "green_regular_2023": "Green Zone Regular Rate (2023, effective Feb 1st)",
+                    "green_eco_2023": "Green Zone Eco Rate (2023, effective Feb 1st)",
+                    "green_zero_2023": "Green Zone Zero Rate (2023, effective Feb 1st)",
 
-                    "blue_regular_2024": "Blue Zone Regular Rate (2024)",
-                    "blue_eco_2024": "Blue Zone Eco Rate (2024)",
-                    "blue_zero_2024": "Blue Zone Zero Rate (2024)",
-                    "green_regular_2024": "Green Zone Regular Rate (2024)",
-                    "green_eco_2024": "Green Zone Eco Rate (2024)",
-                    "green_zero_2024": "Green Zone Zero Rate (2024)",
+                    "blue_regular_2024": "Blue Zone Regular Rate (2024, effective Feb 1st)",
+                    "blue_eco_2024": "Blue Zone Eco Rate (2024, effective Feb 1st)",
+                    "blue_zero_2024": "Blue Zone Zero Rate (2024, effective Feb 1st)",
+                    "green_regular_2024": "Green Zone Regular Rate (2024, effective Feb 1st)",
+                    "green_eco_2024": "Green Zone Eco Rate (2024, effective Feb 1st)",
+                    "green_zero_2024": "Green Zone Zero Rate (2024, effective Feb 1st)",
 
-                    "blue_regular_2025": "Blue Zone Regular Rate (2025)",
-                    "blue_eco_2025": "Blue Zone Eco Rate (2025)",
-                    "blue_zero_2025": "Blue Zone Zero Rate (2025)",
-                    "green_regular_2025": "Green Zone Regular Rate (2025)",
-                    "green_eco_2025": "Green Zone Eco Rate (2025)",
-                    "green_zero_2025": "Green Zone Zero Rate (2025)"
+                    "blue_regular_2025": "Blue Zone Regular Rate (2025, effective Feb 1st)",
+                    "blue_eco_2025": "Blue Zone Eco Rate (2025, effective Feb 1st)",
+                    "blue_zero_2025": "Blue Zone Zero Rate (2025, effective Feb 1st)",
+                    "green_regular_2025": "Green Zone Regular Rate (2025, effective Feb 1st)",
+                    "green_eco_2025": "Green Zone Eco Rate (2025, effective Feb 1st)",
+                    "green_zero_2025": "Green Zone Zero Rate (2025, effective Feb 1st)"
                 }
             }
         },
