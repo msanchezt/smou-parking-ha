@@ -16,9 +16,21 @@
         "content_settings": {
             "automatic_downloads": 1,
             "multiple_automatic_downloads": 1
+        },
+        "content_settings.exceptions.automatic_downloads.*.setting": 1
+    },
+    "browser": {
+        "download": {
+            "prompt_for_download": false
+        },
+        "helperApps": {
+            "neverAsk": {
+                "saveToDisk": "application/pdf"
+            }
         }
     },
     "safebrowsing": {
-        "enabled": false
+        "enabled": false,
+        "disable_download_protection": true
     }
 }

@@ -105,7 +105,7 @@ options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 options.add_argument("--disable-gpu")
 options.add_argument(f"user-agent={random.choice(user_agents)}")
-
+    Update sensor values in Home Assistant
 # Add these specific download preferences
 options.add_experimental_option('prefs', {
     'download.default_directory': '/app/downloads',
@@ -117,9 +117,10 @@ options.add_experimental_option('prefs', {
     'profile.default_content_settings.popups': 0,
     'profile.default_content_setting_values.automatic_downloads': 1
 })
-
+            json=data,
 # Add this to prevent the "multiple files" warning
 options.add_experimental_option('excludeSwitches', ['enable-automation', 'safebrowsing-disable-download-protection'])
+
 
 def update_home_assistant_sensors(sensor_data):
     """
@@ -162,8 +163,16 @@ def collect_parking_data():
             print(f"\nProcessing account: {account['username']}")
             
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-            driver.set_window_size(1920, 1080)  # Full HD resolution
-            
+            driver.set_window_size(1920, 1080)
+            driver.command_executor._commands["send_command"] = ("POST", '/session/$sessionId/chromium/send_command')
+            driver.execute("send_command", {
+                'cmd': 'Page.setDownloadBehavior',
+                'params': {
+                    'behavior': 'allow',
+                    'downloadPath': '/app/downloads'
+                }
+            }) 
+              
             try:
                 # Login process
                 driver.get(smou_moviments)
