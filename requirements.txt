@@ -4,3 +4,4 @@ requests
 python-dotenv
 pandas
 aiofiles
+pdfplumber

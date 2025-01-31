@@ -15,6 +15,10 @@ from dotenv import load_dotenv
 import requests
 import random
 import json
+import pdfplumber
+import tempfile
+from selenium.webdriver.common.action_chains import ActionChains
+import glob
 
 # Load environment variables from .env file
 load_dotenv()
@@ -95,13 +99,19 @@ headers = {
 options = Options()
 options.add_argument("--ignore-certificate-errors")  # Ignore SSL certificate errors
 options.add_argument("--allow-insecure-localhost")  # Optional, for local testing
-options.add_argument("--headless")  # Uncomment to run headless
+#options.add_argument("--headless")  # Uncomment to run headless
 options.add_argument("window-size=1920,1080")  # Set screen size
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 options.add_argument("--disable-javascript")
 options.add_argument("--disable-gpu")
 options.add_argument(f"user-agent={random.choice(user_agents)}")  # Choose a random user-agent
+options.add_experimental_option("prefs", {
+    "download.default_directory": "/app/downloads",
+    "download.prompt_for_download": False,
+    "download.directory_upgrade": True,
+    "safebrowsing.enabled": True
+})
 
 def update_home_assistant_sensors(sensor_data):
     """
@@ -222,7 +232,39 @@ def collect_parking_data():
                             if entry_id in existing_ids:
                                 continue
                             
-                            # Extract relevant fields and store in record
+                            # First, click the "Accions" button for this row
+                            actions_button = row.find_element(By.XPATH, ".//button[contains(@class, 'mat-menu-trigger')]")
+                            actions_button.click()
+                            
+                            # Wait for the PDF download button and click it
+                            pdf_button = WebDriverWait(driver, 10).until(
+                                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'mat-menu-item')]//div[contains(text(), 'Descarregar PDF')]"))
+                            )
+                            pdf_button.click()
+                            
+                            # Wait for download to complete (adjust the timeout as needed)
+                            time.sleep(2)
+                            
+                            # Get the latest downloaded file from the default Chrome download directory
+                            download_dir = "/app/downloads"  # Adjust this path according to your Docker setup
+                            list_of_files = glob.glob(f"{download_dir}/*.pdf")
+                            latest_file = max(list_of_files, key=os.path.getctime)
+                            
+                            # Parse the PDF
+                            try:
+                                with pdfplumber.open(latest_file) as pdf:
+                                    first_page = pdf.pages[0]
+                                    text = first_page.extract_text()
+                                    print(f"PDF content for entry {entry_id}:")
+                                    print(text)
+                                    # TODO: Parse specific fields from the PDF
+                                    
+                                # Clean up - delete the PDF after processing
+                                os.remove(latest_file)
+                            except Exception as e:
+                                print(f"Error processing PDF for entry {entry_id}: {e}")
+                            
+                            # Continue with existing record creation
                             record = {
                                 "ID": entry_id,
                                 "Start date": cells[2].text.strip(),
@@ -230,10 +272,10 @@ def collect_parking_data():
                                 "Number of hours and minutes": cells[9].text.strip(),
                                 "Type of parking": cells[7].text.strip(),
                                 "Cost": cells[10].text.strip(),
-                                "Mail": account["username"]  # Add the email from the account being processed
+                                "Mail": account["username"]
                             }
                             new_entries.append(record)
-                            existing_ids.add(entry_id)  # Add to existing IDs set
+                            existing_ids.add(entry_id)
 
                     # Check if this is the last page; if so, break out of the loop
                     if page == total_pages - 1:

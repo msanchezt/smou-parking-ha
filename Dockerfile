@@ -19,6 +19,11 @@ RUN wget -q "https://chromedriver.storage.googleapis.com/$(curl -sS https://chro
 # Copy application code
 COPY . /app
 WORKDIR /app
+RUN mkdir -p /app/downloads && chmod 777 /app/downloads
+
+# Add Chrome download preferences
+RUN mkdir -p /root/.config/google-chrome/Default/
+COPY chrome-preferences.json /root/.config/google-chrome/Default/Preferences
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
