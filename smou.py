@@ -116,7 +116,6 @@ options.add_experimental_option('prefs', {
     'profile.default_content_settings.popups': 0,
     'profile.default_content_setting_values.automatic_downloads': 1
 })
-            json=data,
 # Add this to prevent the "multiple files" warning
 options.add_experimental_option('excludeSwitches', ['enable-automation', 'safebrowsing-disable-download-protection'])
 
@@ -281,29 +280,31 @@ def collect_parking_data():
                                                 print(f"PDF content for entry {entry_id}:")
                                                 print(text)
                                                 
+                                                # Parse PDF content
+                                                pdf_data = parse_pdf_content(text)
+                                                
                                             # Clean up - delete the PDF after processing
                                             os.remove(latest_file)
                                         except Exception as e:
                                             print(f"Error processing PDF for entry {entry_id}: {e}")
-                                        break
-                                    time.sleep(0.5)
-                                else:
-                                    print(f"Timeout waiting for PDF download for entry {entry_id}")
-                                
-                            except Exception as e:
-                                print(f"Error clicking buttons for entry {entry_id}: {str(e)}")
-                                continue
-                            
-                            # Continue with existing record creation
-                            record = {
-                                "ID": entry_id,
-                                "Start date": cells[2].text.strip(),
-                                "End date": cells[3].text.strip(),
-                                "Number of hours and minutes": cells[9].text.strip(),
-                                "Type of parking": cells[7].text.strip(),
-                                "Cost": cells[10].text.strip(),
-                                "Mail": account["username"]
-                            }
+                                            pdf_data = {}
+                                        
+                                        # Create record with additional fields from PDF
+                                        record = {
+                                            "ID": entry_id,
+                                            "Start date": cells[2].text.strip(),
+                                            "End date": cells[3].text.strip(),
+                                            "Number of hours and minutes": cells[9].text.strip(),
+                                            "Type of parking": cells[7].text.strip(),
+                                            "Cost": cells[10].text.strip(),
+                                            "Mail": account["username"],
+                                            "base_tariff": pdf_data.get('base_tariff', ''),
+                                            "applied_tariff": pdf_data.get('applied_tariff', ''),
+                                            "license_plate": pdf_data.get('license_plate', ''),
+                                            "environmental_label": pdf_data.get('environmental_label', '')
+                                        }
+
+
                             new_entries.append(record)
                             existing_ids.add(entry_id)
 
@@ -339,6 +340,25 @@ def collect_parking_data():
 
     except Exception as e:
         print(f"Error collecting data: {e}")
+
+def parse_pdf_content(text: str) -> dict:
+    """Parse PDF content and extract relevant fields."""
+    lines = text.split('\n')
+    parsed_data = {}
+    
+    for line in lines:
+        if 'Vehicle' in line:
+            parsed_data['license_plate'] = line.split()[-1]
+        elif 'Tarifa base' in line:
+            parsed_data['base_tariff'] = line.split()[2].replace('€/h', '')
+        elif 'Tarifa aplicada' in line:
+            parsed_data['applied_tariff'] = line.split()[2].replace('€/h', '')
+        elif 'Distintiu ambiental' in line:
+            # Extract everything after "Distintiu ambiental" until the percentage
+            env_label = line.split('Distintiu ambiental')[-1].split('-')[0].strip()
+            parsed_data['environmental_label'] = env_label
+            
+    return parsed_data
 
 if __name__ == "__main__":
     collect_parking_data()
