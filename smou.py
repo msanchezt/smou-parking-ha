@@ -97,7 +97,7 @@ headers = {
 
 # Set up Chrome options
 options = Options()
-options.add_argument("--headless=new")  # Use the new headless mode
+#options.add_argument("--headless=new")  # Comment out to see the browser window
 options.add_argument("--ignore-certificate-errors")
 options.add_argument("--allow-insecure-localhost")
 options.add_argument("window-size=1920,1080")
@@ -256,7 +256,31 @@ def collect_parking_data():
                                 driver.execute_script("arguments[0].click();", pdf_button)
                                 time.sleep(2)  # Wait for download to start
                                 
-                                print(f"Successfully clicked PDF download for entry {entry_id}")
+                                # Wait for the file to download and check if it exists
+                                download_dir = "/app/downloads"
+                                timeout = time.time() + 10  # 10 seconds timeout
+                                while time.time() < timeout:
+                                    pdf_files = glob.glob(f"{download_dir}/*.pdf")
+                                    if pdf_files:
+                                        latest_file = max(pdf_files, key=os.path.getctime)
+                                        print(f"Found downloaded PDF: {latest_file}")
+                                        
+                                        # Parse the PDF
+                                        try:
+                                            with pdfplumber.open(latest_file) as pdf:
+                                                first_page = pdf.pages[0]
+                                                text = first_page.extract_text()
+                                                print(f"PDF content for entry {entry_id}:")
+                                                print(text)
+                                                
+                                            # Clean up - delete the PDF after processing
+                                            os.remove(latest_file)
+                                        except Exception as e:
+                                            print(f"Error processing PDF for entry {entry_id}: {e}")
+                                        break
+                                    time.sleep(0.5)
+                                else:
+                                    print(f"Timeout waiting for PDF download for entry {entry_id}")
                                 
                             except Exception as e:
                                 print(f"Error clicking buttons for entry {entry_id}: {str(e)}")
