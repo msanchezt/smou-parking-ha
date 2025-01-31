@@ -105,7 +105,6 @@ options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 options.add_argument("--disable-gpu")
 options.add_argument(f"user-agent={random.choice(user_agents)}")
-    Update sensor values in Home Assistant
 # Add these specific download preferences
 options.add_experimental_option('prefs', {
     'download.default_directory': '/app/downloads',
@@ -171,8 +170,8 @@ def collect_parking_data():
                     'behavior': 'allow',
                     'downloadPath': '/app/downloads'
                 }
-            }) 
-              
+            })
+
             try:
                 # Login process
                 driver.get(smou_moviments)
