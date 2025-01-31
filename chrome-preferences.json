@@ -1,0 +1,6 @@
+{
+    "download": {
+      "default_directory": "/app/downloads",
+      "prompt_for_download": false
+    }
+  }
