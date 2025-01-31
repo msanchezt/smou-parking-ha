@@ -97,21 +97,28 @@ headers = {
 
 # Set up Chrome options
 options = Options()
-options.add_argument("--ignore-certificate-errors")  # Ignore SSL certificate errors
-options.add_argument("--allow-insecure-localhost")  # Optional, for local testing
-#options.add_argument("--headless")  # Uncomment to run headless
-options.add_argument("window-size=1920,1080")  # Set screen size
+options.add_argument("--ignore-certificate-errors")
+options.add_argument("--allow-insecure-localhost")
+#options.add_argument("--headless")
+options.add_argument("window-size=1920,1080")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
-options.add_argument("--disable-javascript")
+#options.add_argument("--disable-javascript")  # Remove this line as we need JavaScript
 options.add_argument("--disable-gpu")
-options.add_argument(f"user-agent={random.choice(user_agents)}")  # Choose a random user-agent
-options.add_experimental_option("prefs", {
-    "download.default_directory": "/app/downloads",
-    "download.prompt_for_download": False,
-    "download.directory_upgrade": True,
-    "safebrowsing.enabled": True
+options.add_argument(f"user-agent={random.choice(user_agents)}")
+
+# Add these specific download preferences
+options.add_experimental_option('prefs', {
+    'download.default_directory': '/app/downloads',
+    'download.prompt_for_download': False,
+    'download.directory_upgrade': True,
+    'safebrowsing.enabled': True,
+    'safebrowsing.disable_download_protection': True,
+    'profile.default_content_setting_values.automatic_downloads': 1
 })
+
+# Add this to prevent the "multiple files" warning
+options.add_experimental_option('excludeSwitches', ['safebrowsing-disable-download-protection'])
 
 def update_home_assistant_sensors(sensor_data):
     """

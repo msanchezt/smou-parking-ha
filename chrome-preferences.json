@@ -1,6 +1,24 @@
 {
     "download": {
-      "default_directory": "/app/downloads",
-      "prompt_for_download": false
+        "default_directory": "/app/downloads",
+        "directory_upgrade": true,
+        "prompt_for_download": false,
+        "safebrowsing": {
+            "enabled": false,
+            "disable_download_protection": true
+        }
+    },
+    "safebrowsing": {
+        "enabled": false
+    },
+    "profile": {
+        "default_content_settings": {
+            "popups": 0,
+            "automatic_downloads": 1
+        },
+        "content_settings": {
+            "automatic_downloads": 1,
+            "multiple_automatic_downloads": 1
+        }
     }
-  }
+}
