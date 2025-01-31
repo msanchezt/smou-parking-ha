@@ -3,13 +3,10 @@
         "default_directory": "/app/downloads",
         "directory_upgrade": true,
         "prompt_for_download": false,
-        "safebrowsing": {
-            "enabled": false,
-            "disable_download_protection": true
-        }
+        "default_directory_infobar_shown": false
     },
-    "safebrowsing": {
-        "enabled": false
+    "plugins": {
+        "always_open_pdf_externally": true
     },
     "profile": {
         "default_content_settings": {
@@ -20,5 +17,8 @@
             "automatic_downloads": 1,
             "multiple_automatic_downloads": 1
         }
+    },
+    "safebrowsing": {
+        "enabled": false
     }
 }

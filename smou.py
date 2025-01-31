@@ -97,13 +97,12 @@ headers = {
 
 # Set up Chrome options
 options = Options()
+options.add_argument("--headless=new")  # Use the new headless mode
 options.add_argument("--ignore-certificate-errors")
 options.add_argument("--allow-insecure-localhost")
-#options.add_argument("--headless")
 options.add_argument("window-size=1920,1080")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
-#options.add_argument("--disable-javascript")  # Remove this line as we need JavaScript
 options.add_argument("--disable-gpu")
 options.add_argument(f"user-agent={random.choice(user_agents)}")
 
@@ -112,13 +111,15 @@ options.add_experimental_option('prefs', {
     'download.default_directory': '/app/downloads',
     'download.prompt_for_download': False,
     'download.directory_upgrade': True,
-    'safebrowsing.enabled': True,
-    'safebrowsing.disable_download_protection': True,
+    'safebrowsing.enabled': False,
+    'download.default_directory_infobar_shown': False,
+    'plugins.always_open_pdf_externally': True,
+    'profile.default_content_settings.popups': 0,
     'profile.default_content_setting_values.automatic_downloads': 1
 })
 
 # Add this to prevent the "multiple files" warning
-options.add_experimental_option('excludeSwitches', ['safebrowsing-disable-download-protection'])
+options.add_experimental_option('excludeSwitches', ['enable-automation', 'safebrowsing-disable-download-protection'])
 
 def update_home_assistant_sensors(sensor_data):
     """
