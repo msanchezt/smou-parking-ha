@@ -140,9 +140,12 @@ class SMOUBlueRegularSensor(SMOUBaseSensor):
         total_regular = 0.0
         
         for entry in data:
+            # Skip entries where PDF was not available
+            if entry.get('pdf_error') == "PDF not available":
+                continue
+                
             if entry['Type of parking'] == 'Zona Blava':
                 start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
-                # Determine the effective year based on February 1st cutoff
                 effective_year = start_date.year
                 if start_date.month == 1:
                     effective_year -= 1
@@ -152,7 +155,17 @@ class SMOUBlueRegularSensor(SMOUBaseSensor):
                     hours = float(time_parts[0].replace('h', ''))
                     minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
                     total_hours = hours + (minutes / 60)
-                    total_regular += total_hours * self._rates[effective_year]['blue']['regular']
+                    
+                    # Use environmental label to determine rate type
+                    env_label = entry.get('environmental_label', '')
+                    if env_label == '0E':
+                        rate = self._rates[effective_year]['blue']['zero']
+                    elif env_label in ['ECO']:
+                        rate = self._rates[effective_year]['blue']['eco']
+                    else:
+                        rate = self._rates[effective_year]['blue']['regular']
+                        
+                    total_regular += total_hours * rate
         
         self._attr_native_value = round(total_regular, 2)
 
@@ -192,15 +205,32 @@ class SMOUGreenRegularSensor(SMOUBaseSensor):
         total_regular = 0.0
         
         for entry in data:
+            # Skip entries where PDF was not available
+            if entry.get('pdf_error') == "PDF not available":
+                continue
+                
             if entry['Type of parking'] == 'Zona Verda':
                 start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
-                year = start_date.year
-                if year in self._rates:
+                effective_year = start_date.year
+                if start_date.month == 1:
+                    effective_year -= 1
+                
+                if effective_year in self._rates:
                     time_parts = entry['Number of hours and minutes'].split(' ')
                     hours = float(time_parts[0].replace('h', ''))
                     minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
                     total_hours = hours + (minutes / 60)
-                    total_regular += total_hours * self._rates[year]['green']['regular']
+                    
+                    # Use environmental label to determine rate type
+                    env_label = entry.get('environmental_label', '')
+                    if env_label == '0E':
+                        rate = self._rates[effective_year]['green']['zero']
+                    elif env_label in ['ECO']:
+                        rate = self._rates[effective_year]['green']['eco']
+                    else:
+                        rate = self._rates[effective_year]['green']['regular']
+                        
+                    total_regular += total_hours * rate
         
         self._attr_native_value = round(total_regular, 2)
 
@@ -220,19 +250,36 @@ class SMOUSavingsSensor(SMOUBaseSensor):
         total_regular = 0.0
         
         for entry in data:
+            # Skip entries where PDF was not available
+            if entry.get('pdf_error') == "PDF not available":
+                continue
+                
             cost = float(entry['Cost'].replace('€', '').replace(',', '.').strip())
             total_paid += cost
             
             start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
-            year = start_date.year
-            if year in self._rates:
+            effective_year = start_date.year
+            if start_date.month == 1:
+                effective_year -= 1
+                
+            if effective_year in self._rates:
                 time_parts = entry['Number of hours and minutes'].split(' ')
                 hours = float(time_parts[0].replace('h', ''))
                 minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
                 total_hours = hours + (minutes / 60)
                 
                 zone_type = 'blue' if entry['Type of parking'] == 'Zona Blava' else 'green'
-                total_regular += total_hours * self._rates[year][zone_type]['regular']
+                
+                # Use environmental label to determine rate type
+                env_label = entry.get('environmental_label', '')
+                if env_label == '0E':
+                    rate = self._rates[effective_year][zone_type]['zero']
+                elif env_label in ['ECO']:
+                    rate = self._rates[effective_year][zone_type]['eco']
+                else:
+                    rate = self._rates[effective_year][zone_type]['regular']
+                    
+                total_regular += total_hours * rate
         
         self._attr_native_value = round(total_regular - total_paid, 2)
 
