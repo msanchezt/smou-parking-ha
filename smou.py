@@ -236,15 +236,22 @@ def collect_parking_data():
                     for row in rows[1:]:  # Skip header
                         cells = row.find_elements(By.TAG_NAME, "td")
                         
-                        if cells and type_of_service_checked in cells[5].text.strip() and cells[4].text.strip() in specific_plates:
+                        if cells and type_of_service_checked in cells[5].text.strip():
+                            parking_type = cells[7].text.strip()
+                            # Only process entries for Zona Verda or Zona Blava
+                            if parking_type not in ['Zona Verda', 'Zona Blava']:
+                                continue
+                                
+                            if cells[4].text.strip() not in specific_plates:
+                                continue
+                                
                             entry_id = cells[1].text.strip()
                             
                             # Skip if we already have this entry
                             if entry_id in existing_ids:
                                 continue
                             
-                            print(f"Processing row with cells count: {len(cells)}")
-                            print(f"Row content: {[cell.text for cell in cells]}")
+                            print(f"Row content: {[cell.text.strip() for cell in cells]}")
                             
                             try:
                                 # Get the last cell (Accions column)
@@ -277,12 +284,9 @@ def collect_parking_data():
                                             with pdfplumber.open(latest_file) as pdf:
                                                 first_page = pdf.pages[0]
                                                 text = first_page.extract_text()
-                                                print(f"PDF content for entry {entry_id}:")
-                                                print(text)
-                                                
+                                                print("PDF content:", text.split('\n'))
                                                 # Parse PDF content
                                                 pdf_data = parse_pdf_content(text)
-                                                
                                             # Clean up - delete the PDF after processing
                                             os.remove(latest_file)
                                         except Exception as e:
