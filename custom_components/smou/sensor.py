@@ -73,6 +73,8 @@ async def async_setup_entry(
         SMOUBlueEntriesSensor(json_path),
         SMOUGreenEntriesSensor(json_path),
         SMOUTotalEntriesSensor(json_path),
+        SMOUOldestEntrySensor(json_path, rates),
+        SMOUNewestEntrySensor(json_path, rates),
     ]
     
     async_add_entities(entities, True)
@@ -305,3 +307,49 @@ class SMOUTotalEntriesSensor(SMOUBaseSensor):
         """Update the sensor."""
         data = await self.get_parking_data()
         self._attr_native_value = len(data)
+
+class SMOUOldestEntrySensor(SMOUBaseSensor):
+    """Sensor for oldest entry date."""
+    
+    _attr_name = "Oldest Entry"
+    _attr_native_unit_of_measurement = None
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    
+    def __init__(self, json_path: str, rates: dict = None) -> None:
+        super().__init__(json_path, rates)
+        self._attr_unique_id = "smou_oldest_entry"
+
+    async def async_update(self) -> None:
+        """Update the sensor."""
+        data = await self.get_parking_data()
+        oldest_date = None
+        
+        for entry in data:
+            entry_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
+            if oldest_date is None or entry_date < oldest_date:
+                oldest_date = entry_date
+        
+        self._attr_native_value = oldest_date
+
+class SMOUNewestEntrySensor(SMOUBaseSensor):
+    """Sensor for newest entry date."""
+    
+    _attr_name = "Newest Entry"
+    _attr_native_unit_of_measurement = None
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    
+    def __init__(self, json_path: str, rates: dict = None) -> None:
+        super().__init__(json_path, rates)
+        self._attr_unique_id = "smou_newest_entry"
+
+    async def async_update(self) -> None:
+        """Update the sensor."""
+        data = await self.get_parking_data()
+        newest_date = None
+        
+        for entry in data:
+            entry_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
+            if newest_date is None or entry_date > newest_date:
+                newest_date = entry_date
+        
+        self._attr_native_value = newest_date
