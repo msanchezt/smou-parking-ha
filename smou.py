@@ -97,7 +97,7 @@ headers = {
 
 # Set up Chrome options
 options = Options()
-#options.add_argument("--headless=new")  # Comment out to see the browser window
+options.add_argument("--headless=new")  # Comment out to see the browser window
 options.add_argument("--ignore-certificate-errors")
 options.add_argument("--allow-insecure-localhost")
 options.add_argument("window-size=1920,1080")

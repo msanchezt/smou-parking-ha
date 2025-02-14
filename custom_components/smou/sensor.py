@@ -75,6 +75,7 @@ async def async_setup_entry(
         SMOUTotalEntriesSensor(json_path),
         SMOUOldestEntrySensor(json_path, rates),
         SMOUNewestEntrySensor(json_path, rates),
+        SMOUPDFErrorEntriesSensor(json_path, rates),
     ]
     
     async_add_entities(entities, True)
@@ -400,3 +401,31 @@ class SMOUNewestEntrySensor(SMOUBaseSensor):
                 newest_date = entry_date
         
         self._attr_native_value = newest_date
+
+class SMOUPDFErrorEntriesSensor(SMOUBaseSensor):
+    """Sensor for entries with PDF download errors."""
+    
+    _attr_name = "PDF Error Entries"
+    _attr_native_unit_of_measurement = "entries"
+    _attr_device_class = None
+    
+    def __init__(self, json_path: str, rates: dict = None) -> None:
+        super().__init__(json_path, rates)
+        self._attr_unique_id = "smou_pdf_error_entries"
+        self._attr_extra_state_attributes = {}
+
+    async def async_update(self) -> None:
+        """Update the sensor."""
+        data = await self.get_parking_data()
+        entries_by_year = {}
+        total_entries = 0
+        
+        for entry in data:
+            if entry.get('pdf_error') == "PDF not available":
+                start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
+                year = start_date.year
+                entries_by_year[year] = entries_by_year.get(year, 0) + 1
+                total_entries += 1
+        
+        self._attr_native_value = total_entries
+        self._attr_extra_state_attributes = entries_by_year
