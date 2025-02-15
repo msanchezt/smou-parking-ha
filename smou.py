@@ -31,10 +31,23 @@ args = parser.parse_args()
 
 ###############################
 smou_moviments = os.getenv("SMOU_MOVEMENTS_URL")
-type_of_service_checked = "Parquímetre"
-specific_plates = os.getenv("LICENSE_PLATES", "").split(",")
-if not specific_plates or specific_plates[0] == "":
-    raise ValueError("No license plates found in environment variables. Please set LICENSE_PLATES")
+plate_tariffs = {}
+i = 1
+while True:
+    plate_tariff = os.getenv(f"LICENSE_PLATE_TARIFF_{i}")
+    if not plate_tariff:
+        break
+    try:
+        plate, tariff = plate_tariff.split(';')
+        plate_tariffs[plate] = tariff
+        i += 1
+    except ValueError:
+        print(f"Warning: Invalid format for LICENSE_PLATE_TARIFF_{i}. Expected format: PLATE;TARIFF")
+        i += 1
+        continue
+
+if not plate_tariffs:
+    raise ValueError("No valid license plate tariffs found in environment variables. Please set LICENSE_PLATE_TARIFF_1, etc.")
 blue_zone_regular_cost=3.25
 blue_zone_eco_cost=2.50
 blue_zone_0_cost=0
@@ -236,97 +249,92 @@ def collect_parking_data():
                     for row in rows[1:]:  # Skip header
                         cells = row.find_elements(By.TAG_NAME, "td")
                         
-                        if cells and type_of_service_checked in cells[5].text.strip():
-                            parking_type = cells[7].text.strip()
-                            # Only process entries for Zona Verda or Zona Blava
-                            if parking_type not in ['Zona Verda', 'Zona Blava']:
-                                continue
-                                
-                            if cells[4].text.strip() not in specific_plates:
-                                continue
-                                
-                            entry_id = cells[1].text.strip()
+                        plate = cells[4].text.strip()
+                        if plate not in plate_tariffs:
+                            continue
+
+                        entry_id = cells[1].text.strip()
+                        
+                        # Skip if we already have this entry
+                        if entry_id in existing_ids:
+                            continue
+                        
+                        print(f"Row content: {[cell.text.strip() for cell in cells]}")
+                        
+                        try:
+                            # Get the last cell (Accions column)
+                            actions_cell = cells[-1]
+                            print(f"Found actions cell with text: {actions_cell.text}")
                             
-                            # Skip if we already have this entry
-                            if entry_id in existing_ids:
-                                continue
+                            # Click the button inside the actions cell
+                            actions_button = actions_cell.find_element(By.TAG_NAME, "button")
+                            driver.execute_script("arguments[0].click();", actions_button)
+                            time.sleep(1)  # Small wait after click
                             
-                            print(f"Row content: {[cell.text.strip() for cell in cells]}")
+                            # Initialize pdf_data with default error state
+                            pdf_data = {"error": "PDF not processed"}
                             
                             try:
-                                # Get the last cell (Accions column)
-                                actions_cell = cells[-1]
-                                print(f"Found actions cell with text: {actions_cell.text}")
+                                pdf_button = WebDriverWait(driver, 10).until(
+                                    EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'actionText') and contains(text(), 'Descarregar PDF')]"))
+                                )
+                                driver.execute_script("arguments[0].click();", pdf_button)
+                                time.sleep(2)  # Wait for download to start
                                 
-                                # Click the button inside the actions cell
-                                actions_button = actions_cell.find_element(By.TAG_NAME, "button")
-                                driver.execute_script("arguments[0].click();", actions_button)
-                                time.sleep(1)  # Small wait after click
+                                # Wait for the file to download and check if it exists
+                                download_dir = "/app/downloads"
+                                timeout = time.time() + 10
+                                pdf_downloaded = False
                                 
-                                # Initialize pdf_data with default error state
-                                pdf_data = {"error": "PDF not processed"}
+                                while time.time() < timeout:
+                                    pdf_files = glob.glob(f"{download_dir}/*.pdf")
+                                    if pdf_files:
+                                        latest_file = max(pdf_files, key=os.path.getctime)
+                                        print(f"Found downloaded PDF: {latest_file}")
+                                        
+                                        try:
+                                            with pdfplumber.open(latest_file) as pdf:
+                                                first_page = pdf.pages[0]
+                                                text = first_page.extract_text()
+                                                print("PDF content:", text.split('\n'))
+                                                pdf_data = parse_pdf_content(text)
+                                            os.remove(latest_file)
+                                            pdf_downloaded = True
+                                            break
+                                        except Exception as e:
+                                            print(f"Error processing PDF for entry {entry_id}: {e}")
+                                            os.remove(latest_file)
+                                            pdf_data = {"error": "PDF processing failed"}
                                 
-                                try:
-                                    pdf_button = WebDriverWait(driver, 10).until(
-                                        EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'actionText') and contains(text(), 'Descarregar PDF')]"))
-                                    )
-                                    driver.execute_script("arguments[0].click();", pdf_button)
-                                    time.sleep(2)  # Wait for download to start
-                                    
-                                    # Wait for the file to download and check if it exists
-                                    download_dir = "/app/downloads"
-                                    timeout = time.time() + 10
-                                    pdf_downloaded = False
-                                    
-                                    while time.time() < timeout:
-                                        pdf_files = glob.glob(f"{download_dir}/*.pdf")
-                                        if pdf_files:
-                                            latest_file = max(pdf_files, key=os.path.getctime)
-                                            print(f"Found downloaded PDF: {latest_file}")
-                                            
-                                            try:
-                                                with pdfplumber.open(latest_file) as pdf:
-                                                    first_page = pdf.pages[0]
-                                                    text = first_page.extract_text()
-                                                    print("PDF content:", text.split('\n'))
-                                                    pdf_data = parse_pdf_content(text)
-                                                os.remove(latest_file)
-                                                pdf_downloaded = True
-                                                break
-                                            except Exception as e:
-                                                print(f"Error processing PDF for entry {entry_id}: {e}")
-                                                os.remove(latest_file)
-                                                pdf_data = {"error": "PDF processing failed"}
-                                    
-                                    if not pdf_downloaded:
-                                        print(f"PDF download failed or timed out for entry {entry_id}")
-                                        pdf_data = {"error": "PDF not available"}
-                                    
-                                except Exception as e:
-                                    print(f"Error accessing PDF download button: {e}")
-                                    pdf_data = {"error": "PDF download button not accessible"}
+                                if not pdf_downloaded:
+                                    print(f"PDF download failed or timed out for entry {entry_id}")
+                                    pdf_data = {"error": "PDF not available"}
                                 
-                                # Create record with additional fields from PDF
-                                record = {
-                                    "ID": entry_id,
-                                    "Start date": cells[2].text.strip(),
-                                    "End date": cells[3].text.strip(),
-                                    "Number of hours and minutes": cells[9].text.strip(),
-                                    "Type of parking": cells[7].text.strip(),
-                                    "Cost": cells[10].text.strip(),
-                                    "Mail": account["username"],
-                                    "base_tariff": pdf_data.get('base_tariff', ''),
-                                    "applied_tariff": pdf_data.get('applied_tariff', ''),
-                                    "license_plate": pdf_data.get('license_plate', ''),
-                                    "environmental_label": pdf_data.get('environmental_label', ''),
-                                    "pdf_error": pdf_data.get('error', '')
-                                }
-                                
-                                new_entries.append(record)
-                                existing_ids.add(entry_id)
                             except Exception as e:
-                                print(f"Error processing row: {e}")
-                                continue
+                                print(f"Error accessing PDF download button: {e}")
+                                pdf_data = {"error": "PDF download button not accessible"}
+                            
+                            # Create record with additional fields from PDF
+                            record = {
+                                "ID": entry_id,
+                                "Start date": cells[2].text.strip(),
+                                "End date": cells[3].text.strip(),
+                                "Number of hours and minutes": cells[9].text.strip(),
+                                "Type of parking": cells[7].text.strip(),
+                                "Cost": cells[10].text.strip(),
+                                "Mail": account["username"],
+                                "base_tariff": pdf_data.get('base_tariff', ''),
+                                "applied_tariff": pdf_data.get('applied_tariff', ''),
+                                "license_plate": pdf_data.get('license_plate', ''),
+                                "environmental_label": pdf_data.get('environmental_label', '') or plate_tariffs[plate],  # Use configured tariff if not in PDF
+                                "pdf_error": pdf_data.get('error', '')
+                            }
+                            
+                            new_entries.append(record)
+                            existing_ids.add(entry_id)
+                        except Exception as e:
+                            print(f"Error processing row: {e}")
+                            continue
 
                     # Check if this is the last page; if so, break out of the loop
                     if page == total_pages - 1:
