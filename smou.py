@@ -324,7 +324,7 @@ def collect_parking_data():
                                     "Mail": account["username"],
                                     "base_tariff": pdf_data.get('base_tariff', ''),
                                     "applied_tariff": pdf_data.get('applied_tariff', ''),
-                                    "license_plate": pdf_data.get('license_plate', ''),
+                                    "license_plate": pdf_data.get('license_plate', '') or plate,  # Use plate from table if not in PDF
                                     "environmental_label": pdf_data.get('environmental_label', '') or plate_tariffs[plate],  # Use configured tariff if not in PDF
                                     "pdf_error": pdf_data.get('error', '')
                                 }
