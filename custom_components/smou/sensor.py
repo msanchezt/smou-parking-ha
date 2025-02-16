@@ -105,6 +105,12 @@ class SMOUBaseSensor(SensorEntity):
             _LOGGER.error(f"Error reading JSON file: {str(e)}")
             return []
 
+    def parse_cost(self, cost_str: str) -> float:
+        """Parse cost string to float, handling special cases."""
+        if cost_str.strip() == '-':
+            return 0.0
+        return float(cost_str.replace('€', '').replace(',', '.').strip())
+
 class SMOUBluePaidSensor(SMOUBaseSensor):
     """Sensor for blue zone paid amount."""
     
@@ -121,7 +127,7 @@ class SMOUBluePaidSensor(SMOUBaseSensor):
         
         for entry in data:
             if entry['Type of parking'] == 'Zona Blava':
-                cost = float(entry['Cost'].replace('€', '').replace(',', '.').strip())
+                cost = self.parse_cost(entry['Cost'])
                 total_paid += cost
         
         self._attr_native_value = round(total_paid, 2)
@@ -186,7 +192,7 @@ class SMOUGreenPaidSensor(SMOUBaseSensor):
         
         for entry in data:
             if entry['Type of parking'] == 'Zona Verda':
-                cost = float(entry['Cost'].replace('€', '').replace(',', '.').strip())
+                cost = self.parse_cost(entry['Cost'])
                 total_paid += cost
         
         self._attr_native_value = round(total_paid, 2)
@@ -252,7 +258,7 @@ class SMOUSavingsSensor(SMOUBaseSensor):
         
         for entry in data:
             # Get actual paid amount
-            cost = float(entry['Cost'].replace('€', '').replace(',', '.').strip())
+            cost = self.parse_cost(entry['Cost'])
             total_paid += cost
             
             start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
