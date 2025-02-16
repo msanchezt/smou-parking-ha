@@ -280,7 +280,7 @@ class SMOUSavingsSensor(SMOUBaseSensor):
             else:
                 # Use base_tariff from entry
                 if entry.get('base_tariff'):
-                    base_rate = float(entry['base_tariff'])
+                    base_rate = float(entry['base_tariff'].replace(',', '.'))
                     total_regular += total_hours * base_rate
         
         self._attr_native_value = round(total_regular - total_paid, 2)
