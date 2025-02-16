@@ -1,6 +1,8 @@
 {
-    "name": "SMOU Parking",
-    "render_readme": true,
-    "domains": ["sensor"],
-    "homeassistant": "2023.8.0"
+  "name": "SMOU Parking",
+  "render_readme": true,
+  "domain": "smou",
+  "homeassistant": "2024.1.0",
+  "iot_class": "local_polling",
+  "icon": "images/logo.png"
 }
