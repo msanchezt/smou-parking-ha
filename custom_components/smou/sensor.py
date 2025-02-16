@@ -70,9 +70,9 @@ async def async_setup_entry(
         SMOUGreenPaidSensor(json_path, rates),
         SMOUGreenRegularSensor(json_path, rates),
         SMOUSavingsSensor(json_path, rates),
-        SMOUBlueEntriesSensor(json_path),
-        SMOUGreenEntriesSensor(json_path),
-        SMOUTotalEntriesSensor(json_path),
+        SMOUBlueEntriesSensor(json_path, rates),
+        SMOUGreenEntriesSensor(json_path, rates),
+        SMOUTotalEntriesSensor(json_path, rates),
         SMOUOldestEntrySensor(json_path, rates),
         SMOUNewestEntrySensor(json_path, rates),
         SMOUPDFErrorEntriesSensor(json_path, rates),
@@ -148,13 +148,26 @@ class SMOUBlueRegularSensor(SMOUBaseSensor):
                 minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
                 duration_hours = hours + (minutes / 60)
                 
-                if not entry.get('pdf_error'):  # Only count entries with valid PDF data
+                start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
+                effective_year = start_date.year
+                if start_date.month == 1:
+                    effective_year -= 1
+                
+                if entry.get('pdf_error') == "PDF not available":
+                    # Use rates from config based on environmental label
+                    env_label = entry.get('environmental_label', 'regular')
+                    zone_type = 'blue'
+                    if effective_year in self._rates:
+                        rate = self._rates[effective_year][zone_type]['regular']
+                        total_amount += duration_hours * rate
+                        total_hours += duration_hours
+                else:
+                    # Use base_tariff from entry
                     if entry.get('base_tariff'):
                         base_rate = float(entry['base_tariff'].replace(',', '.'))
                         total_amount += duration_hours * base_rate
                         total_hours += duration_hours
         
-        # Calculate average if we have hours
         self._attr_native_value = round(total_amount, 2) if total_hours > 0 else 0.0
 
 class SMOUGreenPaidSensor(SMOUBaseSensor):
@@ -200,13 +213,26 @@ class SMOUGreenRegularSensor(SMOUBaseSensor):
                 minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
                 duration_hours = hours + (minutes / 60)
                 
-                if not entry.get('pdf_error'):  # Only count entries with valid PDF data
+                start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
+                effective_year = start_date.year
+                if start_date.month == 1:
+                    effective_year -= 1
+                
+                if entry.get('pdf_error') == "PDF not available":
+                    # Use rates from config based on environmental label
+                    env_label = entry.get('environmental_label', 'regular')
+                    zone_type = 'green'
+                    if effective_year in self._rates:
+                        rate = self._rates[effective_year][zone_type]['regular']
+                        total_amount += duration_hours * rate
+                        total_hours += duration_hours
+                else:
+                    # Use base_tariff from entry
                     if entry.get('base_tariff'):
                         base_rate = float(entry['base_tariff'].replace(',', '.'))
                         total_amount += duration_hours * base_rate
                         total_hours += duration_hours
         
-        # Calculate average if we have hours
         self._attr_native_value = round(total_amount, 2) if total_hours > 0 else 0.0
 
 class SMOUSavingsSensor(SMOUBaseSensor):
