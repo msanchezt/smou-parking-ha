@@ -248,7 +248,7 @@ class SMOUSavingsSensor(SMOUBaseSensor):
     
     def __init__(self, json_path: str, rates: dict) -> None:
         super().__init__(json_path, rates)
-        self._attr_unique_id = "smou_parking_total_savings"
+        self._attr_unique_id = "smou_total_savings"
 
     async def async_update(self) -> None:
         """Update the sensor."""
