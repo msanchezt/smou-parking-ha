@@ -358,7 +358,9 @@ class SMOUOldestEntrySensor(SMOUBaseSensor):
     """Sensor for oldest parking entry date."""
     
     _attr_name = "Oldest Entry"
-    _attr_device_class = None  # Remove SensorDeviceClass.TIMESTAMP
+    _attr_device_class = None
+    _attr_native_unit_of_measurement = None  # Remove the € unit
+    _attr_state_class = None
     
     def __init__(self, json_path: str, rates: dict = None) -> None:
         super().__init__(json_path, rates)
@@ -381,7 +383,9 @@ class SMOUNewestEntrySensor(SMOUBaseSensor):
     """Sensor for newest parking entry date."""
     
     _attr_name = "Newest Entry"
-    _attr_device_class = None  # Remove SensorDeviceClass.TIMESTAMP
+    _attr_device_class = None
+    _attr_native_unit_of_measurement = None  # Remove the € unit
+    _attr_state_class = None
     
     def __init__(self, json_path: str, rates: dict = None) -> None:
         super().__init__(json_path, rates)
