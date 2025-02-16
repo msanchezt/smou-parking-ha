@@ -252,13 +252,36 @@ class SMOUSavingsSensor(SMOUBaseSensor):
 
     async def async_update(self) -> None:
         """Update the sensor."""
-        blue_regular_tariff = self._rates[2023]['blue']['regular'] + self._rates[2024]['blue']['regular'] + self._rates[2025]['blue']['regular']
-        green_regular_tariff = self._rates[2023]['green']['regular'] + self._rates[2024]['green']['regular'] + self._rates[2025]['green']['regular']
+        data = await self.get_parking_data()
         
-        total_paid = (await self.get_parking_data()).get('blue_zone_paid', 0) + (await self.get_parking_data()).get('green_zone_paid', 0)
+        # Get regular tariffs
+        blue_regular = 0.0
+        green_regular = 0.0
+        blue_paid = 0.0
+        green_paid = 0.0
         
-        total_savings = (blue_regular_tariff + green_regular_tariff) - total_paid
+        for entry in data:
+            time_parts = entry['Number of hours and minutes'].split(' ')
+            hours = float(time_parts[0].replace('h', ''))
+            minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
+            duration_hours = hours + (minutes / 60)
+            
+            start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
+            effective_year = start_date.year
+            if start_date.month == 1:
+                effective_year -= 1
+            
+            if entry['Type of parking'] == 'Zona Blava':
+                if effective_year in self._rates:
+                    blue_regular += duration_hours * self._rates[effective_year]['blue']['regular']
+                blue_paid += self.parse_cost(entry['Cost'])
+            
+            elif entry['Type of parking'] == 'Zona Verda':
+                if effective_year in self._rates:
+                    green_regular += duration_hours * self._rates[effective_year]['green']['regular']
+                green_paid += self.parse_cost(entry['Cost'])
         
+        total_savings = (blue_regular + green_regular) - (blue_paid + green_paid)
         self._attr_native_value = round(total_savings, 2)
 
 class SMOUBlueEntriesSensor(SMOUBaseSensor):
