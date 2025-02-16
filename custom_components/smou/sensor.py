@@ -379,15 +379,14 @@ class SMOUOldestEntrySensor(SMOUBaseSensor):
         self._attr_native_value = oldest_date if oldest_date else None
 
 class SMOUNewestEntrySensor(SMOUBaseSensor):
-    """Sensor for newest entry date."""
+    """Sensor for newest parking entry date."""
     
     _attr_name = "Newest Entry"
-    _attr_native_unit_of_measurement = None
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_device_class = None  # Remove SensorDeviceClass.TIMESTAMP
     
     def __init__(self, json_path: str, rates: dict = None) -> None:
         super().__init__(json_path, rates)
-        self._attr_unique_id = "smou_parking_newest_entry"
+        self._attr_unique_id = "smou_newest_entry"
 
     async def async_update(self) -> None:
         """Update the sensor."""
@@ -396,11 +395,11 @@ class SMOUNewestEntrySensor(SMOUBaseSensor):
         
         for entry in data:
             entry_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
-            entry_date = entry_date.replace(tzinfo=datetime.now().astimezone().tzinfo)
             if newest_date is None or entry_date > newest_date:
                 newest_date = entry_date
         
-        self._attr_native_value = newest_date if newest_date else None
+        if newest_date:
+            self._attr_native_value = newest_date.strftime('%d/%m/%Y')
 
 class SMOUPDFErrorEntriesSensor(SMOUBaseSensor):
     """Sensor for entries with PDF download errors."""
