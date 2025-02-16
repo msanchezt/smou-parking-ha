@@ -380,7 +380,7 @@ class SMOUOldestEntrySensor(SMOUBaseSensor):
             if oldest_date is None or entry_date < oldest_date:
                 oldest_date = entry_date
         
-        self._attr_native_value = oldest_date
+        self._attr_native_value = oldest_date.isoformat() if oldest_date else None
 
 class SMOUNewestEntrySensor(SMOUBaseSensor):
     """Sensor for newest entry date."""
@@ -403,7 +403,7 @@ class SMOUNewestEntrySensor(SMOUBaseSensor):
             if newest_date is None or entry_date > newest_date:
                 newest_date = entry_date
         
-        self._attr_native_value = newest_date
+        self._attr_native_value = newest_date.isoformat() if newest_date else None
 
 class SMOUPDFErrorEntriesSensor(SMOUBaseSensor):
     """Sensor for entries with PDF download errors."""
