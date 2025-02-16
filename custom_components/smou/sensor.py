@@ -242,7 +242,7 @@ class SMOUSavingsSensor(SMOUBaseSensor):
     
     def __init__(self, json_path: str, rates: dict) -> None:
         super().__init__(json_path, rates)
-        self._attr_unique_id = "smou_total_savings"
+        self._attr_unique_id = "smou_parking_total_savings"
 
     async def async_update(self) -> None:
         """Update the sensor."""
@@ -366,7 +366,7 @@ class SMOUOldestEntrySensor(SMOUBaseSensor):
     
     def __init__(self, json_path: str, rates: dict = None) -> None:
         super().__init__(json_path, rates)
-        self._attr_unique_id = "smou_oldest_entry"
+        self._attr_unique_id = "smou_parking_oldest_entry"
 
     async def async_update(self) -> None:
         """Update the sensor."""
@@ -389,7 +389,7 @@ class SMOUNewestEntrySensor(SMOUBaseSensor):
     
     def __init__(self, json_path: str, rates: dict = None) -> None:
         super().__init__(json_path, rates)
-        self._attr_unique_id = "smou_newest_entry"
+        self._attr_unique_id = "smou_parking_newest_entry"
 
     async def async_update(self) -> None:
         """Update the sensor."""
