@@ -262,48 +262,24 @@ class SMOUSavingsSensor(SMOUBaseSensor):
         super().__init__(json_path, rates)
         self._attr_unique_id = "smou_total_savings"
 
-    def parse_duration(self, duration_str: str) -> float:
-        """Parse duration string to hours, handling different formats."""
-        if 'kWh' in duration_str:
-            return 0.0
-        
-        time_parts = duration_str.split(' ')
-        hours = float(time_parts[0].replace('h', '').replace(',', '.'))
-        minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
-        return hours + (minutes / 60)
-
     async def async_update(self) -> None:
         """Update the sensor."""
-        data = await self.get_parking_data()
+        hass = self.hass
         
-        # Get regular tariffs
-        blue_regular = 0.0
-        green_regular = 0.0
-        blue_paid = 0.0
-        green_paid = 0.0
+        # Get values from other sensors
+        blue_regular = hass.states.get("sensor.blue_zone_regular_tariff")
+        green_regular = hass.states.get("sensor.green_zone_regular_tariff")
+        blue_paid = hass.states.get("sensor.blue_zone_paid")
+        green_paid = hass.states.get("sensor.green_zone_paid")
         
-        for entry in data:
-            if entry['Type of parking'] not in ['Zona Blava', 'Zona Verda']:
-                continue
-                
-            duration_hours = self.parse_duration(entry['Number of hours and minutes'])
-            
-            start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
-            effective_year = start_date.year
-            if start_date.month == 1:
-                effective_year -= 1
-            
-            if entry['Type of parking'] == 'Zona Blava':
-                if effective_year in self._rates:
-                    blue_regular += duration_hours * self._rates[effective_year]['blue']['regular']
-                blue_paid += self.parse_cost(entry['Cost'])
-            
-            elif entry['Type of parking'] == 'Zona Verda':
-                if effective_year in self._rates:
-                    green_regular += duration_hours * self._rates[effective_year]['green']['regular']
-                green_paid += self.parse_cost(entry['Cost'])
+        # Convert to float, using 0.0 as fallback if sensor not available
+        blue_regular_value = float(blue_regular.state) if blue_regular else 0.0
+        green_regular_value = float(green_regular.state) if green_regular else 0.0
+        blue_paid_value = float(blue_paid.state) if blue_paid else 0.0
+        green_paid_value = float(green_paid.state) if green_paid else 0.0
         
-        total_savings = (blue_regular + green_regular) - (blue_paid + green_paid)
+        # Calculate total savings
+        total_savings = (blue_regular_value + green_regular_value) - (blue_paid_value + green_paid_value)
         self._attr_native_value = round(total_savings, 2)
 
 class SMOUBlueEntriesSensor(SMOUBaseSensor):
