@@ -80,6 +80,23 @@ async def async_setup_entry(
     
     async_add_entities(entities, True)
 
+
+    entities = [
+        SMOUBluePaidSensor(json_path, rates),
+        SMOUBlueRegularSensor(json_path, rates),
+        SMOUGreenPaidSensor(json_path, rates),
+        SMOUGreenRegularSensor(json_path, rates),
+        SMOUBlueEntriesSensor(json_path, rates),
+        SMOUGreenEntriesSensor(json_path, rates),
+        SMOUTotalEntriesSensor(json_path, rates),
+        SMOUOldestEntrySensor(json_path, rates),
+        SMOUNewestEntrySensor(json_path, rates),
+        SMOUPDFErrorEntriesSensor(json_path, rates),
+        SMOUSavingsSensor(json_path, rates),
+    ]
+    
+    async_add_entities(entities, True)
+
 class SMOUBaseSensor(SensorEntity):
     """Base class for SMOU Parking sensors."""
     
