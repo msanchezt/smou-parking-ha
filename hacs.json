@@ -3,6 +3,5 @@
   "render_readme": true,
   "domain": "smou",
   "homeassistant": "2024.1.0",
-  "iot_class": "local_polling",
-  "icon": "https://raw.githubusercontent.com/msanchezt/smou-parking-ha/main/images/logo.png"
+  "iot_class": "local_polling"
 }
