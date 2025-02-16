@@ -375,6 +375,7 @@ class SMOUOldestEntrySensor(SMOUBaseSensor):
         
         for entry in data:
             entry_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
+            entry_date = entry_date.replace(tzinfo=datetime.now().astimezone().tzinfo)
             if oldest_date is None or entry_date < oldest_date:
                 oldest_date = entry_date
         
@@ -398,6 +399,7 @@ class SMOUNewestEntrySensor(SMOUBaseSensor):
         
         for entry in data:
             entry_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
+            entry_date = entry_date.replace(tzinfo=datetime.now().astimezone().tzinfo)
             if newest_date is None or entry_date > newest_date:
                 newest_date = entry_date
         
