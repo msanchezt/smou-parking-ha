@@ -8,5 +8,5 @@
     "requirements": ["aiofiles"],
     "version": "1.0.0",
     "icon": "mdi:car",
-    "logo": "https://raw.githubusercontent.com/msanchezt/smou-parking-ha/main/custom_components/smou_parking/logo.png"
+    "logo": "https://raw.githubusercontent.com/msanchezt/smou-parking-ha/main/custom_components/smou/logo.png"
 } 
