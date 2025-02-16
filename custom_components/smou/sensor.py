@@ -166,20 +166,19 @@ class SMOUBlueRegularSensor(SMOUBaseSensor):
                 if start_date.month == 1:
                     effective_year -= 1
                 
-                if entry.get('pdf_error') == "PDF not available":
-                    # Use rates from config based on environmental label
-                    env_label = entry.get('environmental_label', 'regular')
+                # First try to use base_tariff from entry
+                if entry.get('base_tariff'):
+                    base_rate = float(entry['base_tariff'].replace(',', '.'))
+                    total_amount += duration_hours * base_rate
+                    total_hours += duration_hours
+                # If no base_tariff, use configured rates
+                elif effective_year in self._rates:
+                    env_label = entry.get('environmental_label', 'regular').lower()
                     zone_type = 'blue'
-                    if effective_year in self._rates:
-                        rate = self._rates[effective_year][zone_type]['regular']
-                        total_amount += duration_hours * rate
-                        total_hours += duration_hours
-                else:
-                    # Use base_tariff from entry
-                    if entry.get('base_tariff'):
-                        base_rate = float(entry['base_tariff'].replace(',', '.'))
-                        total_amount += duration_hours * base_rate
-                        total_hours += duration_hours
+                    # Use regular rate for calculation
+                    rate = self._rates[effective_year][zone_type]['regular']
+                    total_amount += duration_hours * rate
+                    total_hours += duration_hours
         
         self._attr_native_value = round(total_amount, 2) if total_hours > 0 else 0.0
 
@@ -213,6 +212,16 @@ class SMOUGreenRegularSensor(SMOUBaseSensor):
         super().__init__(json_path, rates)
         self._attr_unique_id = "smou_green_regular"
 
+    def parse_duration(self, duration_str: str) -> float:
+        """Parse duration string to hours."""
+        try:
+            time_parts = duration_str.split(' ')
+            hours = float(time_parts[0].replace('h', '').replace(',', '.'))
+            minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
+            return hours + (minutes / 60)
+        except (ValueError, IndexError):
+            return 0.0
+
     async def async_update(self) -> None:
         """Update the sensor."""
         data = await self.get_parking_data()
@@ -221,30 +230,26 @@ class SMOUGreenRegularSensor(SMOUBaseSensor):
         
         for entry in data:
             if entry['Type of parking'] == 'Zona Verda':
-                time_parts = entry['Number of hours and minutes'].split(' ')
-                hours = float(time_parts[0].replace('h', ''))
-                minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
-                duration_hours = hours + (minutes / 60)
+                duration_hours = self.parse_duration(entry['Number of hours and minutes'])
                 
                 start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
                 effective_year = start_date.year
                 if start_date.month == 1:
                     effective_year -= 1
                 
-                if entry.get('pdf_error') == "PDF not available":
-                    # Use rates from config based on environmental label
-                    env_label = entry.get('environmental_label', 'regular')
+                # First try to use base_tariff from entry
+                if entry.get('base_tariff'):
+                    base_rate = float(entry['base_tariff'].replace(',', '.'))
+                    total_amount += duration_hours * base_rate
+                    total_hours += duration_hours
+                # If no base_tariff, use configured rates
+                elif effective_year in self._rates:
+                    env_label = entry.get('environmental_label', 'regular').lower()
                     zone_type = 'green'
-                    if effective_year in self._rates:
-                        rate = self._rates[effective_year][zone_type]['regular']
-                        total_amount += duration_hours * rate
-                        total_hours += duration_hours
-                else:
-                    # Use base_tariff from entry
-                    if entry.get('base_tariff'):
-                        base_rate = float(entry['base_tariff'].replace(',', '.'))
-                        total_amount += duration_hours * base_rate
-                        total_hours += duration_hours
+                    # Use regular rate for calculation
+                    rate = self._rates[effective_year][zone_type]['regular']
+                    total_amount += duration_hours * rate
+                    total_hours += duration_hours
         
         self._attr_native_value = round(total_amount, 2) if total_hours > 0 else 0.0
 
