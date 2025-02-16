@@ -252,44 +252,14 @@ class SMOUSavingsSensor(SMOUBaseSensor):
 
     async def async_update(self) -> None:
         """Update the sensor."""
-        data = await self.get_parking_data()
-        total_paid = 0.0
-        total_regular = 0.0
+        blue_regular_tariff = self._rates[2023]['blue']['regular'] + self._rates[2024]['blue']['regular'] + self._rates[2025]['blue']['regular']
+        green_regular_tariff = self._rates[2023]['green']['regular'] + self._rates[2024]['green']['regular'] + self._rates[2025]['green']['regular']
         
-        for entry in data:
-            # Get actual paid amount
-            cost = self.parse_cost(entry['Cost'])
-            total_paid += cost
-            
-            start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
-            effective_year = start_date.year
-            if start_date.month == 1:
-                effective_year -= 1
-            
-            time_parts = entry['Number of hours and minutes'].split(' ')
-            hours = float(time_parts[0].replace('h', ''))
-            minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
-            total_hours = hours + (minutes / 60)
-            
-            if entry.get('pdf_error') == "PDF not available":
-                # Use rates from config based on environmental label
-                env_label = entry.get('environmental_label', 'regular')
-                zone_type = 'blue' if entry['Type of parking'] == 'Zona Blava' else 'green'
-                if effective_year in self._rates:
-                    if env_label == 'zero':
-                        rate = self._rates[effective_year][zone_type]['zero']
-                    elif env_label == 'eco':
-                        rate = self._rates[effective_year][zone_type]['eco']
-                    else:
-                        rate = self._rates[effective_year][zone_type]['regular']
-                    total_regular += total_hours * rate
-            else:
-                # Use base_tariff from entry
-                if entry.get('base_tariff'):
-                    base_rate = float(entry['base_tariff'].replace(',', '.'))
-                    total_regular += total_hours * base_rate
+        total_paid = (await self.get_parking_data()).get('blue_zone_paid', 0) + (await self.get_parking_data()).get('green_zone_paid', 0)
         
-        self._attr_native_value = round(total_regular - total_paid, 2)
+        total_savings = (blue_regular_tariff + green_regular_tariff) - total_paid
+        
+        self._attr_native_value = round(total_savings, 2)
 
 class SMOUBlueEntriesSensor(SMOUBaseSensor):
     """Sensor for blue zone entries count per year."""
