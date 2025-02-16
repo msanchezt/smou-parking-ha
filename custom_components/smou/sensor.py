@@ -250,6 +250,16 @@ class SMOUSavingsSensor(SMOUBaseSensor):
         super().__init__(json_path, rates)
         self._attr_unique_id = "smou_total_savings"
 
+    def parse_duration(self, duration_str: str) -> float:
+        """Parse duration string to hours, handling different formats."""
+        if 'kWh' in duration_str:
+            return 0.0
+        
+        time_parts = duration_str.split(' ')
+        hours = float(time_parts[0].replace('h', '').replace(',', '.'))
+        minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
+        return hours + (minutes / 60)
+
     async def async_update(self) -> None:
         """Update the sensor."""
         data = await self.get_parking_data()
@@ -261,10 +271,10 @@ class SMOUSavingsSensor(SMOUBaseSensor):
         green_paid = 0.0
         
         for entry in data:
-            time_parts = entry['Number of hours and minutes'].split(' ')
-            hours = float(time_parts[0].replace('h', ''))
-            minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
-            duration_hours = hours + (minutes / 60)
+            if entry['Type of parking'] not in ['Zona Blava', 'Zona Verda']:
+                continue
+                
+            duration_hours = self.parse_duration(entry['Number of hours and minutes'])
             
             start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
             effective_year = start_date.year
