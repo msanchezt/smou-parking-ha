@@ -76,6 +76,8 @@ async def async_setup_entry(
         SMOUNewestEntrySensor(json_path, rates),
         SMOUPDFErrorEntriesSensor(json_path, rates),
         SMOUSavingsSensor(json_path, rates),
+        SMOUBlueSavingsSensor(json_path, rates),
+        SMOUGreenSavingsSensor(json_path, rates),
     ]
     
     async_add_entities(entities, True)
@@ -111,6 +113,16 @@ class SMOUBaseSensor(SensorEntity):
             return 0.0
         return float(cost_str.replace('€', '').replace(',', '.').strip())
 
+    def parse_duration(self, duration_str: str) -> float:
+        """Parse duration string to hours."""
+        try:
+            time_parts = duration_str.split(' ')
+            hours = float(time_parts[0].replace('h', '').replace(',', '.'))
+            minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
+            return hours + (minutes / 60)
+        except (ValueError, IndexError):
+            return 0.0
+
 class SMOUBluePaidSensor(SMOUBaseSensor):
     """Sensor for blue zone paid amount."""
     
@@ -140,16 +152,6 @@ class SMOUBlueRegularSensor(SMOUBaseSensor):
     def __init__(self, json_path: str, rates: dict) -> None:
         super().__init__(json_path, rates)
         self._attr_unique_id = "smou_blue_regular"
-
-    def parse_duration(self, duration_str: str) -> float:
-        """Parse duration string to hours."""
-        try:
-            time_parts = duration_str.split(' ')
-            hours = float(time_parts[0].replace('h', '').replace(',', '.'))
-            minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
-            return hours + (minutes / 60)
-        except (ValueError, IndexError):
-            return 0.0
 
     async def async_update(self) -> None:
         """Update the sensor."""
@@ -211,16 +213,6 @@ class SMOUGreenRegularSensor(SMOUBaseSensor):
     def __init__(self, json_path: str, rates: dict) -> None:
         super().__init__(json_path, rates)
         self._attr_unique_id = "smou_green_regular"
-
-    def parse_duration(self, duration_str: str) -> float:
-        """Parse duration string to hours."""
-        try:
-            time_parts = duration_str.split(' ')
-            hours = float(time_parts[0].replace('h', '').replace(',', '.'))
-            minutes = float(time_parts[1].replace('m', '')) if len(time_parts) > 1 else 0
-            return hours + (minutes / 60)
-        except (ValueError, IndexError):
-            return 0.0
 
     async def async_update(self) -> None:
         """Update the sensor."""
@@ -431,3 +423,77 @@ class SMOUPDFErrorEntriesSensor(SMOUBaseSensor):
         
         self._attr_native_value = total_entries
         self._attr_extra_state_attributes = entries_by_year
+
+class SMOUBlueSavingsSensor(SMOUBaseSensor):
+    """Sensor for blue zone savings."""
+    
+    _attr_name = "Blue Zone Savings"
+    _attr_native_unit_of_measurement = "€"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    
+    def __init__(self, json_path: str, rates: dict) -> None:
+        super().__init__(json_path, rates)
+        self._attr_unique_id = "smou_blue_savings"
+
+    async def async_update(self) -> None:
+        """Update the sensor."""
+        data = await self.get_parking_data()
+        total_paid = 0.0
+        total_regular = 0.0
+
+        for entry in data:
+            if entry['Type of parking'] == 'Zona Blava':
+                # Calculate what was actually paid
+                if entry.get('Cost'):
+                    total_paid += float(entry['Cost'].replace('€', '').replace(',', '.'))
+                
+                # Calculate what would have been paid at regular rate
+                duration_hours = self.parse_duration(entry['Number of hours and minutes'])
+                start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
+                effective_year = start_date.year
+                if start_date.month == 1:
+                    effective_year -= 1
+                
+                if effective_year in self._rates:
+                    rate = self._rates[effective_year]['blue']['regular']
+                    total_regular += duration_hours * rate
+
+        savings = total_regular - total_paid
+        self._attr_native_value = round(savings, 2) if savings > 0 else 0.0
+
+class SMOUGreenSavingsSensor(SMOUBaseSensor):
+    """Sensor for green zone savings."""
+    
+    _attr_name = "Green Zone Savings"
+    _attr_native_unit_of_measurement = "€"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    
+    def __init__(self, json_path: str, rates: dict) -> None:
+        super().__init__(json_path, rates)
+        self._attr_unique_id = "smou_green_savings"
+
+    async def async_update(self) -> None:
+        """Update the sensor."""
+        data = await self.get_parking_data()
+        total_paid = 0.0
+        total_regular = 0.0
+
+        for entry in data:
+            if entry['Type of parking'] == 'Zona Verda':
+                # Calculate what was actually paid
+                if entry.get('Cost'):
+                    total_paid += float(entry['Cost'].replace('€', '').replace(',', '.'))
+                
+                # Calculate what would have been paid at regular rate
+                duration_hours = self.parse_duration(entry['Number of hours and minutes'])
+                start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
+                effective_year = start_date.year
+                if start_date.month == 1:
+                    effective_year -= 1
+                
+                if effective_year in self._rates:
+                    rate = self._rates[effective_year]['green']['regular']
+                    total_regular += duration_hours * rate
+
+        savings = total_regular - total_paid
+        self._attr_native_value = round(savings, 2) if savings > 0 else 0.0
