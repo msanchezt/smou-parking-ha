@@ -6,6 +6,5 @@
     "dependencies": [],
     "codeowners": ["@msanchezt"],
     "requirements": ["aiofiles"],
-    "version": "1.0.0",
-    "logo": "https://raw.githubusercontent.com/msanchezt/smou-parking-ha/main/custom_components/smou/logo.png"
+    "version": "1.0.0"
 } 
