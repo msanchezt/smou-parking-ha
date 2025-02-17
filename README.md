@@ -83,6 +83,9 @@ cards:
           - entity: sensor.blue_zone_regular_tariff
             name: Regular rate
             icon: mdi:cash-multiple
+          - entity: sensor.blue_zone_savings
+            name: Blue zone savings
+            icon: mdi:cash-check
           - entity: sensor.blue_zone_entries
             name: Times parked
             icon: mdi:counter
@@ -100,6 +103,9 @@ cards:
           - entity: sensor.green_zone_regular_tariff
             name: Regular rate
             icon: mdi:cash-multiple
+          - entity: sensor.green_zone_savings
+            name: Green zone savings
+            icon: mdi:cash-check
           - entity: sensor.green_zone_entries
             name: Times parked
             icon: mdi:counter
@@ -116,16 +122,25 @@ cards:
         entity: sensor.total_entries
         name: Times parked
         icon: mdi:counter
+      - type: entity
+        entity: sensor.newest_entry
+        name: Newest entry
+        icon: mdi:counter
+      - type: entity
+        entity: sensor.oldest_entry
+        name: Oldest entry
+        icon: mdi:counter
   - type: history-graph
     title: 💶 Payment History
     hours_to_show: 500
     entities:
-      - entity: sensor.blue_zone_paid
+      - entity: sensor.blue_zone_savings
         name: Blue
-      - entity: sensor.green_zone_paid
+      - entity: sensor.green_zone_savings
         name: Green
       - entity: sensor.total_savings
         name: Savings
+
 ```
 
 This dashboard includes:
