@@ -437,28 +437,18 @@ class SMOUBlueSavingsSensor(SMOUBaseSensor):
 
     async def async_update(self) -> None:
         """Update the sensor."""
-        data = await self.get_parking_data()
-        total_paid = 0.0
-        total_regular = 0.0
-
-        for entry in data:
-            if entry['Type of parking'] == 'Zona Blava':
-                # Calculate what was actually paid
-                if entry.get('Cost'):
-                    total_paid += float(entry['Cost'].replace('€', '').replace(',', '.'))
-                
-                # Calculate what would have been paid at regular rate
-                duration_hours = self.parse_duration(entry['Number of hours and minutes'])
-                start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
-                effective_year = start_date.year
-                if start_date.month == 1:
-                    effective_year -= 1
-                
-                if effective_year in self._rates:
-                    rate = self._rates[effective_year]['blue']['regular']
-                    total_regular += duration_hours * rate
-
-        savings = total_regular - total_paid
+        hass = self.hass
+        
+        # Get values from other sensors
+        blue_regular = hass.states.get("sensor.blue_zone_regular_tariff")
+        blue_paid = hass.states.get("sensor.blue_zone_paid")
+        
+        # Convert to float, using 0.0 as fallback if sensor not available
+        blue_regular_value = float(blue_regular.state) if blue_regular else 0.0
+        blue_paid_value = float(blue_paid.state) if blue_paid else 0.0
+        
+        # Calculate savings
+        savings = blue_regular_value - blue_paid_value
         self._attr_native_value = round(savings, 2) if savings > 0 else 0.0
 
 class SMOUGreenSavingsSensor(SMOUBaseSensor):
@@ -474,26 +464,16 @@ class SMOUGreenSavingsSensor(SMOUBaseSensor):
 
     async def async_update(self) -> None:
         """Update the sensor."""
-        data = await self.get_parking_data()
-        total_paid = 0.0
-        total_regular = 0.0
-
-        for entry in data:
-            if entry['Type of parking'] == 'Zona Verda':
-                # Calculate what was actually paid
-                if entry.get('Cost'):
-                    total_paid += float(entry['Cost'].replace('€', '').replace(',', '.'))
-                
-                # Calculate what would have been paid at regular rate
-                duration_hours = self.parse_duration(entry['Number of hours and minutes'])
-                start_date = datetime.strptime(entry['Start date'], '%d/%m/%Y %H:%M:%S')
-                effective_year = start_date.year
-                if start_date.month == 1:
-                    effective_year -= 1
-                
-                if effective_year in self._rates:
-                    rate = self._rates[effective_year]['green']['regular']
-                    total_regular += duration_hours * rate
-
-        savings = total_regular - total_paid
+        hass = self.hass
+        
+        # Get values from other sensors
+        green_regular = hass.states.get("sensor.green_zone_regular_tariff")
+        green_paid = hass.states.get("sensor.green_zone_paid")
+        
+        # Convert to float, using 0.0 as fallback if sensor not available
+        green_regular_value = float(green_regular.state) if green_regular else 0.0
+        green_paid_value = float(green_paid.state) if green_paid else 0.0
+        
+        # Calculate savings
+        savings = green_regular_value - green_paid_value
         self._attr_native_value = round(savings, 2) if savings > 0 else 0.0
